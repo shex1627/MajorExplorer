@@ -118,7 +118,7 @@ def main():
                     major = st.session_state.selected_majors[idx]
                     emoji = MAJOR_EMOJIS.get(major, "📚")
                     # Truncate major name if too long
-                    display_name = f"{emoji} {major[:15]}{'...' if len(major) > 15 else major}"
+                    display_name = f"{emoji} {major[:15] + '...' if len(major) > 15 else major}"
                     with col:
                         if st.button(f"✕ {display_name}",
                                    key=f"remove_{idx}",
