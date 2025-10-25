@@ -118,19 +118,16 @@ def main():
     ascending = (sort_order == 'Ascending')
     comparison_df = comparison_df.sort_values(sort_by, ascending=ascending)
 
-    # Format the display dataframe
-    display_df = comparison_df.copy()
-    display_df['Avg Median Salary'] = display_df['Avg Median Salary'].apply(format_salary)
-    display_df['Salary Range'] = display_df.apply(
+    # Create a dataframe for styling (keep numeric values)
+    style_df = comparison_df.copy()
+    style_df['Salary Range'] = style_df.apply(
         lambda row: f"{format_salary(row['Min Salary'])} - {format_salary(row['Max Salary'])}",
         axis=1
     )
-    display_df['Total Job Openings'] = display_df['Total Job Openings'].apply(format_jobs)
-    display_df['Avg Growth Rate (%)'] = display_df['Avg Growth Rate (%)'].apply(format_growth)
-    display_df['Top 3 Careers'] = display_df['Top 3 Careers'].apply(lambda x: ', '.join(x[:3]))
+    style_df['Top 3 Careers'] = style_df['Top 3 Careers'].apply(lambda x: ', '.join(x[:3]))
 
-    # Select columns to display
-    final_display_df = display_df[[
+    # Keep numeric columns for gradient styling
+    style_df_display = style_df[[
         'Major',
         'Avg Median Salary',
         'Salary Range',
@@ -138,14 +135,57 @@ def main():
         'Avg Growth Rate (%)',
         'Number of Career Paths',
         'Top 3 Careers'
-    ]]
+    ]].copy()
 
-    # Display the table
+    # Apply styling with color gradients
+    def style_dataframe(df):
+        # Create styler
+        styler = df.style
+
+        # Apply gradient to numeric columns
+        styler = styler.background_gradient(
+            subset=['Avg Median Salary'],
+            cmap='Greens',
+            vmin=df['Avg Median Salary'].min(),
+            vmax=df['Avg Median Salary'].max()
+        )
+
+        styler = styler.background_gradient(
+            subset=['Total Job Openings'],
+            cmap='Blues',
+            vmin=df['Total Job Openings'].min(),
+            vmax=df['Total Job Openings'].max()
+        )
+
+        styler = styler.background_gradient(
+            subset=['Avg Growth Rate (%)'],
+            cmap='RdYlGn',  # Red-Yellow-Green for growth (red=negative, green=positive)
+            vmin=df['Avg Growth Rate (%)'].min(),
+            vmax=df['Avg Growth Rate (%)'].max()
+        )
+
+        styler = styler.background_gradient(
+            subset=['Number of Career Paths'],
+            cmap='Purples',
+            vmin=df['Number of Career Paths'].min(),
+            vmax=df['Number of Career Paths'].max()
+        )
+
+        # Format the numeric columns as text
+        styler = styler.format({
+            'Avg Median Salary': lambda x: format_salary(x),
+            'Total Job Openings': lambda x: format_jobs(x),
+            'Avg Growth Rate (%)': lambda x: format_growth(x),
+        })
+
+        return styler
+
+    # Display the styled table
     st.dataframe(
-        final_display_df,
+        style_dataframe(style_df_display),
         use_container_width=True,
         hide_index=True,
-        height=min(600, len(final_display_df) * 35 + 38)
+        height=min(600, len(style_df_display) * 35 + 38)
     )
 
     # Statistics cards
