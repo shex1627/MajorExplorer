@@ -4,6 +4,46 @@ Each major maps to a list of relevant occupations from the BLS data.
 Note: Jobs can appear in multiple majors as many careers are suitable for various educational backgrounds.
 """
 
+# Emoji icons for each major
+MAJOR_EMOJIS = {
+    "Computer Science": "💻",
+    "Data Science/Analytics": "📊",
+    "Computer/Software Engineering": "⚙️",
+    "Nursing": "🩺",
+    "Business Administration/Management": "💼",
+    "Psychology": "🧠",
+    "Mechanical Engineering": "🔧",
+    "Electrical Engineering": "⚡",
+    "Civil Engineering": "🏗️",
+    "Chemical Engineering": "⚗️",
+    "Biomedical Engineering": "🧬",
+    "Environmental Engineering": "🌍",
+    "Biology/Biological Sciences": "🧬",
+    "Chemistry": "🧪",
+    "Physics": "⚛️",
+    "Mathematics (Pure)": "🔢",
+    "Applied Mathematics": "📐",
+    "Statistics": "📈",
+    "Finance": "💰",
+    "Accounting": "📊",
+    "Economics": "💹",
+    "Marketing": "📢",
+    "Communications/Media Studies": "📺",
+    "English/Literature": "📚",
+    "Education (Teaching)": "👨‍🏫",
+    "Pre-Medicine": "⚕️",
+    "Public Health": "🏥",
+    "Pharmacy": "💊",
+    "Physical Therapy/Kinesiology": "🏃",
+    "Political Science/Government": "🏛️",
+    "Sociology": "👥",
+    "History": "📜",
+    "Environmental Science": "🌱",
+    "Criminal Justice": "⚖️",
+    "Graphic Design": "🎨",
+    "Performing Arts (Theater/Music)": "🎭",
+}
+
 MAJOR_TO_OCCUPATIONS = {
     "Computer Science": [
         "Software developers",

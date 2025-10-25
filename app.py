@@ -6,7 +6,7 @@ Help high school students explore college majors and career options
 import streamlit as st
 import pandas as pd
 from data_aggregator import aggregate_major_data, get_major_details
-from major_occupation_mapping import MAJOR_TO_OCCUPATIONS, DEFAULT_TOP_MAJORS
+from major_occupation_mapping import MAJOR_TO_OCCUPATIONS, DEFAULT_TOP_MAJORS, MAJOR_EMOJIS
 
 # Page config
 st.set_page_config(
@@ -37,6 +37,12 @@ def format_jobs(jobs):
 def format_growth(growth):
     """Format growth rate as percentage."""
     return f"{growth:+.1f}%"
+
+
+def format_major_with_emoji(major_name):
+    """Format major name with emoji icon."""
+    emoji = MAJOR_EMOJIS.get(major_name, "📚")  # Default to book emoji if not found
+    return f"{emoji} {major_name}"
 
 
 @st.cache_data
@@ -94,8 +100,11 @@ def main():
                 idx = i + j
                 if idx < len(st.session_state.selected_majors):
                     major = st.session_state.selected_majors[idx]
+                    emoji = MAJOR_EMOJIS.get(major, "📚")
+                    # Truncate major name if too long
+                    display_name = f"{emoji} {major[:15]}{'...' if len(major) > 15 else major}"
                     with col:
-                        if st.button(f"✕ {major[:20]}{'...' if len(major) > 20 else ''}",
+                        if st.button(f"✕ {display_name}",
                                    key=f"remove_{idx}",
                                    use_container_width=True):
                             st.session_state.selected_majors.remove(major)
@@ -111,10 +120,10 @@ def main():
     comparison_df = all_majors_df[all_majors_df['Major'].isin(selected_majors)].copy()
 
     # Main comparison table section
-    st.header("📊 Major Comparison")
+    st.subheader("📊 Major Comparison")
 
     # Add new major section at the top of main page
-    st.markdown("### Add a Major to Compare")
+    st.markdown("#### Add a Major to Compare")
 
     # Get available majors
     available_majors = [m for m in all_majors_list if m not in st.session_state.selected_majors]
@@ -123,13 +132,21 @@ def main():
 
     with add_col1:
         if len(available_majors) > 0:
-            selected_to_add = st.selectbox(
+            # Create options with emojis for display
+            options_with_emojis = [""] + [format_major_with_emoji(m) for m in available_majors]
+            selected_display = st.selectbox(
                 "Search and select a major:",
-                options=[""] + available_majors,
+                options=options_with_emojis,
                 index=0,
                 help="Type to search for a major (e.g., 'chem' for Chemistry)",
                 label_visibility="collapsed"
             )
+            # Extract the actual major name (remove emoji)
+            if selected_display and selected_display != "":
+                # Find the matching major by removing emoji prefix
+                selected_to_add = selected_display.split(" ", 1)[1] if " " in selected_display else selected_display
+            else:
+                selected_to_add = None
         else:
             st.info("All majors are already selected!")
             selected_to_add = None
@@ -164,6 +181,10 @@ def main():
 
     # Create a dataframe for styling (keep numeric values)
     style_df = comparison_df.copy()
+
+    # Add emojis to major names
+    style_df['Major'] = style_df['Major'].apply(format_major_with_emoji)
+
     style_df['Salary Range'] = style_df.apply(
         lambda row: f"{format_salary(row['Min Salary'])} - {format_salary(row['Max Salary'])}",
         axis=1
@@ -236,18 +257,26 @@ def main():
     st.markdown("---")
     st.header("🔍 Explore Career Details")
 
-    selected_major_detail = st.selectbox(
+    # Create options with emojis for display
+    options_with_emojis_detail = [format_major_with_emoji(m) for m in selected_majors]
+    selected_display_detail = st.selectbox(
         "Select a major to see detailed career information:",
-        options=selected_majors,
+        options=options_with_emojis_detail,
         index=0 if len(selected_majors) > 0 else None
     )
+
+    # Extract actual major name (remove emoji)
+    if selected_display_detail:
+        selected_major_detail = selected_display_detail.split(" ", 1)[1] if " " in selected_display_detail else selected_display_detail
+    else:
+        selected_major_detail = None
 
     if selected_major_detail:
         careers_df, stats = get_major_details(selected_major_detail, BLS_DATA_PATH)
 
         if not careers_df.empty:
             # Display stats for selected major
-            st.subheader(f"Career Paths for {selected_major_detail}")
+            st.subheader(f"Career Paths for {format_major_with_emoji(selected_major_detail)}")
 
             stat_col1, stat_col2, stat_col3 = st.columns(3)
             with stat_col1:
