@@ -27,7 +27,9 @@ if os.environ.get('HIDE_MENU', 'true') == 'true':
         """, unsafe_allow_html=True)
 
 # Constants
-BLS_DATA_PATH = '/Users/shadowclone/Desktop/Code/warcraftlogs/warcraftlogs/ai_code/bls_occupations_all.csv'
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BLS_DATA_PATH = os.path.join(SCRIPT_DIR, 'data', 'bls_occupations_all.csv')
 
 
 def format_salary(salary):
