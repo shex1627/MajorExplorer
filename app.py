@@ -3,6 +3,7 @@ Major & Career Explorer - Streamlit App
 Help high school students explore college majors and career options
 """
 
+import os
 import streamlit as st
 import pandas as pd
 from data_aggregator import aggregate_major_data, get_major_details
@@ -15,6 +16,15 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Hide Streamlit menu and footer based on environment variable
+if os.environ.get('HIDE_MENU', 'true') == 'true':
+    st.markdown("""
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        </style>
+        """, unsafe_allow_html=True)
 
 # Constants
 BLS_DATA_PATH = '/Users/shadowclone/Desktop/Code/warcraftlogs/warcraftlogs/ai_code/bls_occupations_all.csv'
