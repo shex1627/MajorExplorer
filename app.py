@@ -23,6 +23,10 @@ if os.environ.get('HIDE_MENU', 'true') == 'true':
         <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
+        header {visibility: hidden;}
+        .stDeployButton {display: none;}
+        button[kind="header"] {display: none;}
+        [data-testid="stToolbar"] {display: none;}
         </style>
         """, unsafe_allow_html=True)
 
