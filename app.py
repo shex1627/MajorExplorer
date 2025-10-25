@@ -52,6 +52,7 @@ def main():
     Explore different college majors and their career paths. Compare salary, job openings,
     and growth outlook to make informed decisions about your future.
     """)
+    st.caption("Data source: U.S. Bureau of Labor Statistics (BLS) Occupational Outlook Handbook")
 
     # Load data
     all_majors_df = load_aggregated_data()
@@ -66,30 +67,43 @@ def main():
     if 'selected_majors' not in st.session_state:
         st.session_state.selected_majors = DEFAULT_TOP_MAJORS.copy()
 
-    # Multiselect for adding/removing majors
-    selected_majors = st.sidebar.multiselect(
-        "Select majors to compare:",
-        options=all_majors_list,
-        default=st.session_state.selected_majors,
-        help="Add or remove majors from the comparison table"
-    )
-
-    # Update session state
-    st.session_state.selected_majors = selected_majors
-
     # Quick action buttons
     st.sidebar.markdown("### Quick Actions")
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        if st.button("Reset to Top 15"):
+        if st.button("Reset to Top 15", use_container_width=True):
             st.session_state.selected_majors = DEFAULT_TOP_MAJORS.copy()
             st.rerun()
     with col2:
-        if st.button("Select All"):
-            st.session_state.selected_majors = all_majors_list
+        if st.button("Select All", use_container_width=True):
+            st.session_state.selected_majors = all_majors_list.copy()
             st.rerun()
 
+    st.sidebar.markdown("---")
+
+    # Show currently selected majors
+    st.sidebar.markdown("### Currently Selected Majors")
+    st.sidebar.caption(f"{len(st.session_state.selected_majors)} majors selected")
+
+    # Display selected majors as removable chips
+    if len(st.session_state.selected_majors) > 0:
+        # Create columns for remove buttons (2 per row)
+        for i in range(0, len(st.session_state.selected_majors), 2):
+            cols = st.sidebar.columns(2)
+            for j, col in enumerate(cols):
+                idx = i + j
+                if idx < len(st.session_state.selected_majors):
+                    major = st.session_state.selected_majors[idx]
+                    with col:
+                        if st.button(f"✕ {major[:20]}{'...' if len(major) > 20 else ''}",
+                                   key=f"remove_{idx}",
+                                   use_container_width=True):
+                            st.session_state.selected_majors.remove(major)
+                            st.rerun()
+
     # Filter data for selected majors
+    selected_majors = st.session_state.selected_majors
+
     if len(selected_majors) == 0:
         st.warning("⚠️ Please select at least one major to compare.")
         return
@@ -98,6 +112,36 @@ def main():
 
     # Main comparison table section
     st.header("📊 Major Comparison")
+
+    # Add new major section at the top of main page
+    st.markdown("### Add a Major to Compare")
+
+    # Get available majors
+    available_majors = [m for m in all_majors_list if m not in st.session_state.selected_majors]
+
+    add_col1, add_col2, add_col3 = st.columns([3, 1, 6])
+
+    with add_col1:
+        if len(available_majors) > 0:
+            selected_to_add = st.selectbox(
+                "Search and select a major:",
+                options=[""] + available_majors,
+                index=0,
+                help="Type to search for a major (e.g., 'chem' for Chemistry)",
+                label_visibility="collapsed"
+            )
+        else:
+            st.info("All majors are already selected!")
+            selected_to_add = None
+
+    with add_col2:
+        if len(available_majors) > 0 and selected_to_add and selected_to_add != "":
+            if st.button("➕ Add", use_container_width=True):
+                if selected_to_add not in st.session_state.selected_majors:
+                    st.session_state.selected_majors.append(selected_to_add)
+                    st.rerun()
+
+    st.markdown("---")
 
     # Sorting options
     sort_col1, sort_col2, sort_col3 = st.columns([2, 2, 6])
@@ -159,7 +203,7 @@ def main():
 
         styler = styler.background_gradient(
             subset=['Avg Growth Rate (%)'],
-            cmap='RdYlGn',  # Red-Yellow-Green for growth (red=negative, green=positive)
+            cmap='Greens',  # Green gradient for growth rate
             vmin=df['Avg Growth Rate (%)'].min(),
             vmax=df['Avg Growth Rate (%)'].max()
         )
@@ -187,44 +231,6 @@ def main():
         hide_index=True,
         height=min(600, len(style_df_display) * 35 + 38)
     )
-
-    # Statistics cards
-    st.markdown("---")
-    st.subheader("📈 Key Statistics")
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        highest_salary_major = comparison_df.loc[comparison_df['Avg Median Salary'].idxmax()]
-        st.metric(
-            "Highest Avg Salary",
-            highest_salary_major['Major'],
-            format_salary(highest_salary_major['Avg Median Salary'])
-        )
-
-    with col2:
-        most_jobs_major = comparison_df.loc[comparison_df['Total Job Openings'].idxmax()]
-        st.metric(
-            "Most Job Openings",
-            most_jobs_major['Major'],
-            format_jobs(most_jobs_major['Total Job Openings'])
-        )
-
-    with col3:
-        fastest_growth_major = comparison_df.loc[comparison_df['Avg Growth Rate (%)'].idxmax()]
-        st.metric(
-            "Fastest Growth",
-            fastest_growth_major['Major'],
-            format_growth(fastest_growth_major['Avg Growth Rate (%)'])
-        )
-
-    with col4:
-        most_paths_major = comparison_df.loc[comparison_df['Number of Career Paths'].idxmax()]
-        st.metric(
-            "Most Career Paths",
-            most_paths_major['Major'],
-            f"{most_paths_major['Number of Career Paths']} careers"
-        )
 
     # Detailed view section
     st.markdown("---")
@@ -267,10 +273,6 @@ def main():
 
                     st.write("**What they do:**")
                     st.write(row['what_they_do'][:500] + "..." if len(str(row['what_they_do'])) > 500 else row['what_they_do'])
-
-    # Footer
-    st.markdown("---")
-    st.caption("Data source: U.S. Bureau of Labor Statistics (BLS) Occupational Outlook Handbook")
 
 
 if __name__ == "__main__":
